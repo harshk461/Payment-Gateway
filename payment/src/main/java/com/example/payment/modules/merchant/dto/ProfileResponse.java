@@ -6,8 +6,10 @@ import lombok.Data;
 @Data
 @Builder
 public class ProfileResponse {
+    private String name;
     private Long merchantId;
     private String businessName;
     private String email;
     private String webhookUrl;
+    private String status;
 }

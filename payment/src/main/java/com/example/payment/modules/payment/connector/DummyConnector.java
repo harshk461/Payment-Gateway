@@ -5,10 +5,12 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import com.example.payment.modules.payment.entity.PaymentIntent;
+import com.example.payment.modules.payment.service.MerchantWebhookService;
 
 @Component
 public class DummyConnector {
-    public ConnectorResponse authorize(PaymentIntent intent, String paymentToken) {
+    public ConnectorResponse authorize(PaymentIntent intent, String paymentToken,
+            MerchantWebhookService merchantWebhookService) {
         // ----------------------------------------
         // In real PSP integration:
         // - validate token
@@ -22,7 +24,7 @@ public class DummyConnector {
 
         // Generate PSP transaction reference like a real provider
         String providerRef = "dummy_txn_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-
+        merchantWebhookService.emitPaymentIntentProcessing(intent.getMerchantId(), intent);
         return new ConnectorResponse(success, providerRef);
     }
 }

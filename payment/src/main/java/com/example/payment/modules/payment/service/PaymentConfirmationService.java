@@ -25,15 +25,18 @@ public class PaymentConfirmationService {
     private final WebhookEventRepository webhookEventRepository;
     private final ConfirmPayment confirmPayment;
     private final DummyConnector dummyConnector;
+    private final MerchantWebhookService merchantWebhookService;
 
     public PaymentConfirmationService(PaymentIntentRepository paymentIntentRepository,
             PaymentTransactionRepository paymentTransactionRepository, WebhookEventRepository webhookEventRepository,
-            ConfirmPayment confirmPayment, DummyConnector dummyConnector) {
+            ConfirmPayment confirmPayment, DummyConnector dummyConnector,
+            MerchantWebhookService merchantWebhookService) {
         this.paymentIntentRepository = paymentIntentRepository;
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.webhookEventRepository = webhookEventRepository;
         this.confirmPayment = confirmPayment;
         this.dummyConnector = dummyConnector;
+        this.merchantWebhookService = merchantWebhookService;
     }
 
     public ConfirmPaymentResponse confirmPaymentIntent(Long intentId, ConfirmPaymentRequest dto) {
@@ -58,7 +61,7 @@ public class PaymentConfirmationService {
         txn.setResponsePayload("DUMMY RESPONSE");
         txn = paymentTransactionRepository.save(txn);
 
-        ConnectorResponse connectorResponse = dummyConnector.authorize(intent, paymentToken);
+        ConnectorResponse connectorResponse = dummyConnector.authorize(intent, paymentToken, merchantWebhookService);
 
         if (connectorResponse.isSuccess()) {
             // SUCCESS
@@ -67,10 +70,14 @@ public class PaymentConfirmationService {
 
             txn.setStatus(TransactionStatus.SUCCESS);
             txn.setProviderReference(connectorResponse.getProviderReference());
+
+            merchantWebhookService.emitPaymentIntentSuccess(intent.getMerchantId(), intent,
+                    connectorResponse.getProviderReference());
         } else {
             // FAILED
             intent.setStatus(PaymentIntentStatus.FAILED);
             txn.setStatus(TransactionStatus.FAILED);
+            merchantWebhookService.emitPaymentIntentFailed(intent.getMerchantId(), intent);
         }
 
         paymentIntentRepository.save(intent);

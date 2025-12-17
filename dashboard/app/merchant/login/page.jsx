@@ -1,14 +1,34 @@
 "use client";
 
+import axios from "axios";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function MerchantLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: call /auth/merchant/login
+    const body = {
+      type: "MERCHANT",
+      email,
+      password,
+    };
+
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`,
+      body
+    );
+
+    console.log(response);
+
+    if (response.data) {
+      localStorage.setItem("merchant_token", response.data.token);
+      router.replace("/");
+    }
   };
 
   return (
@@ -67,12 +87,12 @@ export default function MerchantLoginPage() {
 
         <p className="mt-4 text-[11px] text-slate-500 text-center">
           Don&apos;t have a merchant account?{" "}
-          <a
+          <Link
             href="/admin/merchants/register"
             className="text-emerald-400 hover:text-emerald-300"
           >
             Ask admin to onboard you
-          </a>
+          </Link>
         </p>
       </div>
     </div>

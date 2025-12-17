@@ -2,17 +2,17 @@ package com.example.payment.common;
 
 public class AuditContext {
 
-    private static final ThreadLocal<Long> currentMerchantId = new ThreadLocal<>();
+    private static final ThreadLocal<Long> merchantHolder = new ThreadLocal<>();
 
     public static void setCurrentMerchant(Long merchantId) {
-        currentMerchantId.set(merchantId);
+        merchantHolder.set(merchantId);
     }
 
     public static Long getMerchantId() {
-        return currentMerchantId.get();
+        return merchantHolder.get();
     }
 
     public static void clear() {
-        currentMerchantId.remove();
+        merchantHolder.remove();
     }
 }

@@ -17,10 +17,13 @@ import com.example.payment.modules.payment.repository.PaymentIntentRepository;
 public class PaymentIntentService {
     private final PaymentIntentRepository paymentIntentRepository;
     private final TokenGenerator tokenGenerator;
+    private final MerchantWebhookService merchantWebhookService;
 
-    public PaymentIntentService(PaymentIntentRepository paymentIntentRepository, TokenGenerator tokenGenerator) {
+    public PaymentIntentService(PaymentIntentRepository paymentIntentRepository, TokenGenerator tokenGenerator,
+            MerchantWebhookService merchantWebhookService) {
         this.paymentIntentRepository = paymentIntentRepository;
         this.tokenGenerator = tokenGenerator;
+        this.merchantWebhookService = merchantWebhookService;
     }
 
     public CreatePaymentIntentResponse createPaymentIntent(CreatePaymentIntentRequest dto) {
@@ -58,6 +61,9 @@ public class PaymentIntentService {
         intent.setIdempotencyKey(dto.getIdempotencyKey());
 
         intent = paymentIntentRepository.save(intent);
+
+        System.out.println("=-==--===Webhook=--=-=-=-=");
+        merchantWebhookService.emitPaymentIntentInitiated(merchantId, intent);
 
         return CreatePaymentIntentResponse.builder()
                 .intentId(intent.getId())

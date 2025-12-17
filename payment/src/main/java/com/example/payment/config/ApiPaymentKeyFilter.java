@@ -1,8 +1,11 @@
 package com.example.payment.config;
 
 import com.example.payment.common.AuditContext;
+import com.example.payment.modules.auth.utils.JwtUtil;
 import com.example.payment.modules.merchant.entity.Merchant;
 import com.example.payment.modules.merchant.repository.MerchantRepository;
+
+import io.jsonwebtoken.Claims;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,31 +17,56 @@ import java.io.IOException;
 @Component
 public class ApiPaymentKeyFilter implements Filter {
 
+    private final JwtUtil jwtUtil;
     private final MerchantRepository merchantRepository;
 
-    public ApiPaymentKeyFilter(MerchantRepository merchantRepository) {
+    public ApiPaymentKeyFilter(JwtUtil jwtUtil, MerchantRepository merchantRepository) {
+        this.jwtUtil = jwtUtil;
         this.merchantRepository = merchantRepository;
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+    public void doFilter(
+            ServletRequest request,
+            ServletResponse response,
+            FilterChain chain) throws IOException, ServletException {
 
         HttpServletRequest req = (HttpServletRequest) request;
 
-        // Read Authorization header
         String authHeader = req.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String jwt = authHeader.substring(7);
 
-            String secretKey = authHeader.substring(7).trim();
+            try {
+                Claims claims = jwtUtil.parseToken(jwt);
 
-            // Look up merchant from DB
-            Merchant merchant = merchantRepository.findBySecretKey(secretKey);
+                Long merchantId = claims.get("merchantId", Long.class);
+                String type = claims.get("type", String.class);
 
-            if (merchant != null) {
-                // Store merchantId in context for downstream services
-                AuditContext.setCurrentMerchant(merchant.getId());
+                // Only allow merchant JWTs for dashboard/payment APIs
+                if ("MERCHANT".equals(type) && merchantId != null) {
+                    AuditContext.setCurrentMerchant(merchantId);
+                }
+
+            } catch (Exception e) {
+                System.out.println("JWT parsing error: " + e.getMessage());
+            }
+        }
+
+        if (authHeader != null && authHeader.startsWith("Basic ")) {
+            String secretKey = authHeader.substring(6);
+
+            try {
+                Merchant merchant = merchantRepository.findBySecretKey(secretKey);
+
+                if (merchant == null) {
+                    System.out.println("Invalid Secret Key");
+                } else {
+                    AuditContext.setCurrentMerchant(merchant.getId());
+                }
+            } catch (Exception e) {
+                System.out.println("Secret Key error: " + e.getMessage());
             }
         }
 

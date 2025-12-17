@@ -1,12 +1,13 @@
-export async function tokenizeCard(baseUrl, cardDetails) {
+export async function tokenizeCard(baseUrl, cardDetails,key) {
   const res = await fetch(`${baseUrl}/tokenize/payment-token`, {
     method: "POST",
     headers: { "Content-Type": "application/json",
-        "X-API-KEY":"test_key_123"
+        "X-API-KEY":"test_key_123",
+        'Authorization':`Basic ${key}`
      },
     body: JSON.stringify({
       type: "card",
-      card: cardDetails
+      card: {...cardDetails?.card}
     }),
   });
 
@@ -14,10 +15,14 @@ export async function tokenizeCard(baseUrl, cardDetails) {
   return data.token;
 }
 
-export async function confirmPayment(baseUrl, intentId, token) {
+export async function confirmPayment(baseUrl, intentId, token,key) {
   const res = await fetch(`${baseUrl}/payment_intents/${intentId}/confirm`, {
     method: "POST",
-    headers: { "Content-Type": "application/json","X-API-KEY":"test_key_123" },
+    headers: { 
+      "Content-Type": "application/json",
+      "X-API-KEY":"test_key_123",
+      'Authorization':`Basic ${key}`
+     },
     body: JSON.stringify({ paymentMethodToken: token }),
   });
 

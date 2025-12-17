@@ -1,15 +1,34 @@
 // app/admin/login/page.tsx
 "use client";
 
+import axios from "axios";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: call /auth/admin/login
+    const body = {
+      type: "ADMIN",
+      email,
+      password,
+    };
+
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`,
+      body
+    );
+
+    console.log(response);
+
+    if (response.data) {
+      localStorage.setItem("admin_token", response.data.token);
+      router.replace("/");
+    }
   };
 
   return (

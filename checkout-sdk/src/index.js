@@ -19,12 +19,13 @@ class PaymentGateway {
   open(options) {
     this.options = options;
     Modal.open(options, async (cardDetails) => {
-      const token = await tokenizeCard(this.baseUrl, cardDetails);
+      const token = await tokenizeCard(this.baseUrl, cardDetails,this.key);
 
       const paymentResult = await confirmPayment(
         this.baseUrl,
         options.intentId,
-        token
+        token,
+        this.key
       );
 
       Modal.showResult(paymentResult);

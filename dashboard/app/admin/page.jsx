@@ -1,9 +1,38 @@
 // app/admin/overview/page.tsx
 "use client";
 
-import React from "react";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 export default function AdminOverviewPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  // TODO: replace this with real auth check (cookies/JWT/API)
+  const isMerchantLoggedIn = () => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("admin_token") != null;
+  };
+
+  useEffect(() => {
+    const checkLoggedIn = async () => {
+      if (!isMerchantLoggedIn()) {
+        router.replace("/admin/login");
+      } else {
+        setLoading(false);
+      }
+    };
+
+    checkLoggedIn();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
+        <p className="text-sm text-slate-400">Loading dashboard…</p>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       {/* Top bar */}

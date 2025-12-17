@@ -12,25 +12,37 @@ import java.util.Arrays;
 @Configuration
 public class CorsConfig {
 
-    @Bean
-    public CorsFilter corsFilter() {
-        CorsConfiguration config = new CorsConfiguration();
+        @Bean
+        public CorsFilter corsFilter() {
+                CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000", // Next.js
-                "http://localhost:3001" // SDK server
-        ));
+                config.setAllowedOrigins(Arrays.asList(
+                                "http://localhost:3000", // Next.js
+                                "http://localhost:3001", // SDK server
+                                "http://localhost:3002",
+                                "http://localhost:3090"));
 
-        config.setAllowCredentials(true);
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
+                config.setAllowCredentials(true);
+                config.addAllowedHeader("*");
+                config.addAllowedMethod("*");
 
-        // VERY IMPORTANT for preflight
-        config.addExposedHeader("*");
+                config.setAllowedHeaders(Arrays.asList(
+                                "Authorization",
+                                "Content-Type",
+                                "X-Requested-With",
+                                "Accept",
+                                "*"));
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+                config.setExposedHeaders(Arrays.asList(
+                                "Authorization",
+                                "Content-Type"));
 
-        return new CorsFilter(source);
-    }
+                // VERY IMPORTANT for preflight
+                config.addExposedHeader("*");
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", config);
+
+                return new CorsFilter(source);
+        }
 }

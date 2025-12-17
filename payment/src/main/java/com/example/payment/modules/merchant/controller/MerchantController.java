@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.payment.modules.merchant.dto.ToggleProfileResponse;
+import com.example.payment.modules.merchant.dto.UpdateProfileRequest;
+import com.example.payment.modules.merchant.dto.ApiKeysResponse;
 import com.example.payment.modules.merchant.dto.ProfileResponse;
 import com.example.payment.modules.merchant.dto.RegenerateKeysResponse;
 import com.example.payment.modules.merchant.dto.RegisterMerchantRequest;
@@ -26,14 +28,15 @@ public class MerchantController {
         this.merchantService = merchantService;
     }
 
-    @PostMapping("/register")
-    public RegisterMerchantResponse registerMerchant(@RequestBody RegisterMerchantRequest body) {
-        return this.merchantService.registerMerchant(body);
-    }
-
     @GetMapping("/me")
     public ProfileResponse getMerchantProfile(@RequestHeader("Authorization") String authHeader) {
         return this.merchantService.getMerchantProfile(authHeader);
+    }
+
+    @PutMapping("/me")
+    public ProfileResponse updateMerchantProfile(@RequestHeader("Authorization") String authHeader,
+            @RequestBody UpdateProfileRequest req) {
+        return this.merchantService.updateMerchantProfile(authHeader, req);
     }
 
     @PutMapping("/webhook")
@@ -55,5 +58,10 @@ public class MerchantController {
     @PutMapping("/enable")
     public ToggleProfileResponse enableMerchant(@RequestHeader("Authorization") String authHeader) {
         return this.merchantService.enableMerchant(authHeader);
+    }
+
+    @GetMapping("/api-keys")
+    public ApiKeysResponse getApiKeys(@RequestHeader("Authorization") String authHeader) {
+        return merchantService.getApiKeys(authHeader);
     }
 }
