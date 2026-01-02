@@ -1,5 +1,5 @@
+import { confirmPayment, tokenizeCard, tokenizeUpi } from "./api.js";
 import Modal from "./modal.js";
-import { tokenizeCard, confirmPayment } from "./api.js";
 import modalCss from "./styles.css";
 
 function injectStyles(css) {
@@ -11,26 +11,77 @@ function injectStyles(css) {
 injectStyles(modalCss);
 
 class PaymentGateway {
-  constructor(options) {
-    this.key = options.key;
-    this.baseUrl = options.baseUrl;
+  constructor({ key, baseUrl }) {
+    this.key = key;
+    this.baseUrl = baseUrl;
   }
 
   open(options) {
-    this.options = options;
-    Modal.open(options, async (cardDetails) => {
-      const token = await tokenizeCard(this.baseUrl, cardDetails,this.key);
+    Modal.open(options, async (payload) => {
+      let confirmPayload = {};
 
-      const paymentResult = await confirmPayment(
+      if (payload.method === "card") {
+        const token = await tokenizeCard(this.baseUrl, payload, this.key);
+
+        confirmPayload = {
+          paymentMethodToken: token,
+          paymentMethod: "CARD",
+          cardNetwork: detectCardNetwork(payload.card.number),
+        };
+      }
+
+      else if (payload.method === "upi") {
+        const token = await tokenizeUpi(this.baseUrl, payload.upi.id, this.key);
+
+        confirmPayload = {
+          paymentMethodToken: token,
+          paymentMethod: "UPI",
+          upiApp: detectUpiApp(payload.upi.id),
+        };
+      }
+
+      else if (payload.method === "netbanking") {
+        confirmPayload = {
+          paymentMethodToken: "netbanking_dummy",
+          paymentMethod: "NET_BANKING",
+          bankCode: payload.netbanking.bank,
+        };
+      }
+
+      else if (payload.method === "wallet") {
+        confirmPayload = {
+          paymentMethodToken: "wallet_dummy",
+          paymentMethod: "WALLET",
+        };
+      }
+
+      const result = await confirmPayment(
         this.baseUrl,
         options.intentId,
-        token,
+        confirmPayload,
         this.key
       );
 
-      Modal.showResult(paymentResult);
+      Modal.showResult(result);
     });
+
   }
+}
+
+// ---------------- HELPERS ----------------
+
+function detectCardNetwork(cardNumber = "") {
+  if (cardNumber.startsWith("4")) return "VISA";
+  if (cardNumber.startsWith("5")) return "MASTERCARD";
+  if (cardNumber.startsWith("6")) return "RUPAY";
+  return "UNKNOWN";
+}
+
+function detectUpiApp(upiId = "") {
+  if (upiId.includes("okhdfc")) return "gpay";
+  if (upiId.includes("ybl")) return "phonepe";
+  if (upiId.includes("paytm")) return "paytm";
+  return "other";
 }
 
 window.PaymentGateway = PaymentGateway;

@@ -5,42 +5,70 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity('app_payment_transactions')
+@Index('IDX_TXN_INTENT_ID', ['intentId'])
 export class AppPaymentTransaction {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'order_id', type: 'varchar' })
-  orderId: string;
+  // ---------------- RELATION ----------------
 
   @Column({ name: 'intent_id', type: 'int' })
   intentId: number;
 
+  // ---------------- AMOUNT ----------------
+
   @Column({ type: 'int' })
   amount: number;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', length: 3 })
   currency: string;
 
-  @Column({ name: 'client_secret', type: 'varchar' })
-  clientSecret: string;
-
-  @Column({ name: 'idempotency_key', type: 'varchar' })
-  idempotencyKey: string;
+  // ---------------- PROCESSING ----------------
 
   @Column({ type: 'varchar' })
-  status: string;
+  status: string; // PENDING | SUCCESS | FAILED
+
+  @Column({ name: 'attempt_no', type: 'int' })
+  attemptNo: number;
 
   @Column({ type: 'varchar' })
-  event: string;
+  connector: string; // dummy / stripe / razorpay
 
-  @Column({ name: 'provider_reference', type: 'varchar' })
-  providerReference: string;
+  // ---------------- PAYMENT METHOD ----------------
 
   @Column({ name: 'payment_method', type: 'varchar' })
-  paymentMethod: string;
+  paymentMethod: string; // CARD | UPI | WALLET | NET_BANKING
+
+  @Column({ name: 'card_network', type: 'varchar', nullable: true })
+  cardNetwork?: string;
+
+  @Column({ name: 'upi_app', type: 'varchar', nullable: true })
+  upiApp?: string;
+
+  @Column({ name: 'wallet_provider', type: 'varchar', nullable: true })
+  walletProvider?: string;
+
+  @Column({ name: 'bank_code', type: 'varchar', nullable: true })
+  bankCode?: string;
+
+  // ---------------- RESULT ----------------
+
+  @Column({ name: 'provider_reference', type: 'varchar', nullable: true })
+  providerReference?: string;
+
+  @Column({ name: 'failure_reason', type: 'varchar', nullable: true })
+  failureReason?: string;
+
+  // ---------------- RAW RESPONSE ----------------
+
+  @Column({ name: 'response_payload', type: 'json', nullable: true })
+  responsePayload?: any;
+
+  // ---------------- TIMESTAMPS ----------------
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -1,3 +1,5 @@
+import { confirmPayment, tokenizeCard, tokenizeUpi } from "./api";
+
 // modal.js
 const Modal = {
   open(options, onPay) {
@@ -144,7 +146,9 @@ const Modal = {
 
     // Pay handler
     document.getElementById("pg-pay-btn").onclick = () => {
-      const activeTab = root.querySelector(".pg-tab.pg-tab-active").getAttribute("data-tab");
+      const activeTab = root
+        .querySelector(".pg-tab.pg-tab-active")
+        .getAttribute("data-tab");
 
       const payload = { method: activeTab };
 
@@ -154,24 +158,29 @@ const Modal = {
           expMonth: document.getElementById("pg-exp-month").value,
           expYear: document.getElementById("pg-exp-year").value,
           cvv: document.getElementById("pg-cvv").value,
-          save: document.getElementById("pg-save-card").checked,
-        };
-      } else if (activeTab === "upi") {
-        payload.upi = {
-          id: document.getElementById("pg-upi-id").value,
-        };
-      } else if (activeTab === "netbanking") {
-        payload.netbanking = {
-          bank: document.getElementById("pg-bank").value,
-        };
-      } else if (activeTab === "cod") {
-        payload.cod = {
-          confirmExactChange: document.getElementById("pg-cod-confirm").checked,
         };
       }
 
-      onPay(payload);
+      if (activeTab === "upi") {
+        payload.upi = {
+          id: document.getElementById("pg-upi-id").value,
+        };
+      }
+
+      if (activeTab === "netbanking") {
+        payload.netbanking = {
+          bank: document.getElementById("pg-bank").value,
+        };
+      }
+
+      if (activeTab === "wallet") {
+        payload.wallet = {};
+      }
+
+      onPay(payload); // 🔥 ONLY emit
     };
+
+
   },
 
   showResult(result) {

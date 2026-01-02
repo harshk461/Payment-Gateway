@@ -1,0 +1,348 @@
+@import "tailwindcss";
+
+:root {
+  /* Brand – Primary (Trust Blue) */
+  --color-primary: #1E3A8A;
+  --color-primary-light: #3B82F6;
+  --color-primary-soft: #E0E7FF;
+
+  /* Neutrals */
+  --color-gray-900: #0F172A;
+  --color-gray-700: #334155;
+  --color-gray-500: #64748B;
+  --color-gray-300: #CBD5E1;
+  --color-gray-100: #F1F5F9;
+
+  /* Status */
+  --color-success: #16A34A;
+  --color-warning: #F59E0B;
+  --color-error: #DC2626;
+  --color-info: #0EA5E9;
+
+  /* Surfaces */
+  --page-bg: #F8FAFC;
+  --card-bg: #FFFFFF;
+  --border-color: #E5E7EB;
+
+  /* Typography */
+  --font-family-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-size-h1: 28px;
+  --font-size-h2: 22px;
+  --font-size-h3: 18px;
+  --font-size-body: 15px;
+  --font-size-small: 12px;
+
+  --font-weight-heading: 600;
+  --font-weight-body: 400;
+  --font-weight-button: 500;
+
+  /* Layout */
+  --layout-max-width: 1200px;
+  --layout-page-padding: 24px;
+  --topbar-height: 64px;
+  --sidebar-width: 240px;
+
+  /* Components – buttons */
+  --btn-primary-bg: var(--color-primary);
+  --btn-primary-bg-hover: #1E40AF;
+  --btn-primary-text: #FFFFFF;
+  --btn-primary-radius: 10px;
+
+  --btn-secondary-bg: #FFFFFF;
+  --btn-secondary-border: var(--color-gray-300);
+  --btn-secondary-text: var(--color-primary);
+
+  /* Components – inputs */
+  --input-height: 44px;
+  --input-radius: 10px;
+  --input-border: var(--color-gray-300);
+  --input-bg: #FFFFFF;
+  --input-placeholder: var(--color-gray-500);
+  --input-focus-border: var(--color-primary-light);
+  --input-focus-ring: rgba(59, 130, 246, 0.25);
+
+  /* Components – cards */
+  --card-radius: 16px;
+  --card-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  --card-padding: 20px;
+
+  /* Elevation / misc */
+  --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.06);
+  --transition-fast: 150ms ease-out;
+  --transition-normal: 200ms ease-out;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--page-bg);
+  color: var(--color-gray-900);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-body);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: var(--font-weight-heading);
+  color: var(--color-gray-900);
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+}
+
+h3 {
+  font-size: var(--font-size-h3);
+}
+
+small {
+  font-size: var(--font-size-small);
+}
+
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--page-bg);
+}
+
+.app-topbar {
+  height: var(--topbar-height);
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.app-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-logo-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.app-logo-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.app-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.app-user-name {
+  font-size: 14px;
+  color: var(--color-gray-700);
+}
+
+.app-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.app-shell-main {
+  flex: 1;
+  display: flex;
+  min-height: calc(100vh - var(--topbar-height));
+}
+
+.app-sidebar {
+  width: var(--sidebar-width);
+  background: var(--card-bg);
+  border-right: 1px solid var(--border-color);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.app-sidebar-section-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-gray-500);
+  margin: 8px 8px 4px;
+}
+
+.app-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--color-gray-700);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.app-sidebar-item:hover {
+  background: var(--color-gray-100);
+}
+
+.app-sidebar-item--active {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.app-content {
+  flex: 1;
+  padding: var(--layout-page-padding);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--font-weight-button);
+  padding: 0 16px;
+  height: 40px;
+  border-radius: var(--btn-primary-radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  box-shadow: 0 8px 20px rgba(30, 58, 138, 0.2);
+}
+
+.btn-primary:hover {
+  background: var(--btn-primary-bg-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(30, 64, 175, 0.22);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+}
+
+.btn-secondary {
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--btn-secondary-border);
+}
+
+.btn-secondary:hover {
+  background: var(--color-gray-100);
+}
+
+/* Inputs */
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 13px;
+  color: var(--color-gray-700);
+  font-weight: 500;
+}
+
+.input {
+  height: var(--input-height);
+  border-radius: var(--input-radius);
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--color-gray-900);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--input-placeholder);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 3px var(--input-focus-ring);
+}
+
+/* Helper / error text */
+
+.field-hint {
+  font-size: 12px;
+  color: var(--color-gray-500);
+}
+
+.field-error {
+  font-size: 12px;
+  color: var(--color-error);
+}
+
+/* Cards */
+
+.card {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  padding: var(--card-padding);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}

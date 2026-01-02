@@ -40,6 +40,12 @@ public class Merchant extends BaseEntity {
     @Column
     private String webhookUrl; // Merchant's webhook receiver URL
 
+    @Column
+    private String webhookVersion;
+
+    @Column
+    private String webhookSecret;
+
     @Enumerated(EnumType.STRING)
     private MerchantStatus status; // ACTIVE / DISABLED
 }

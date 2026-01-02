@@ -43,6 +43,6 @@ public class PaymentIntent extends BaseEntity {
     @Column
     private String description;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "JSON")
     private String metadata; // JSON as String
 }

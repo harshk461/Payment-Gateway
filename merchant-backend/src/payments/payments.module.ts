@@ -6,6 +6,7 @@ import { AppOrderPayment } from './entities/order-payment.entity';
 import { AppPaymentStatus } from './entities/payment-status.entity';
 import { AppPaymentTransaction } from './entities/payment-transaction.entity';
 import { JwtCustomModule } from 'src/jwt/jwt.module';
+import { AppWebhookEvent } from './entities/webhook-event.entity';
 
 @Module({
   controllers: [PaymentsController],
@@ -15,6 +16,7 @@ import { JwtCustomModule } from 'src/jwt/jwt.module';
       AppOrderPayment,
       AppPaymentStatus,
       AppPaymentTransaction,
+      AppWebhookEvent,
     ]),
     JwtCustomModule,
   ],

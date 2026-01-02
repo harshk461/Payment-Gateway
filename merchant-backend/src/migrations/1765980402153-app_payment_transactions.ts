@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { MigrationInterface, QueryRunner, Table, TableIndex } from 'typeorm';
 
 export class AppPaymentTransactions1765980402153 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -13,16 +13,15 @@ export class AppPaymentTransactions1765980402153 implements MigrationInterface {
             isGenerated: true,
             generationStrategy: 'increment',
           },
-          {
-            name: 'order_id',
-            type: 'varchar',
-            isNullable: false,
-          },
+
+          // -------- RELATION --------
           {
             name: 'intent_id',
             type: 'int',
             isNullable: false,
           },
+
+          // -------- AMOUNT --------
           {
             name: 'amount',
             type: 'int',
@@ -31,38 +30,74 @@ export class AppPaymentTransactions1765980402153 implements MigrationInterface {
           {
             name: 'currency',
             type: 'varchar',
+            length: '3',
             isNullable: false,
           },
-          {
-            name: 'client_secret',
-            type: 'varchar',
-            isNullable: false,
-          },
-          {
-            name: 'idempotency_key',
-            type: 'varchar',
-            isNullable: false,
-          },
+
+          // -------- PROCESSING --------
           {
             name: 'status',
             type: 'varchar',
             isNullable: false,
           },
           {
-            name: 'event',
-            type: 'varchar',
+            name: 'attempt_no',
+            type: 'int',
             isNullable: false,
           },
           {
-            name: 'provider_reference',
+            name: 'connector',
             type: 'varchar',
             isNullable: false,
           },
+
+          // -------- PAYMENT METHOD --------
           {
             name: 'payment_method',
             type: 'varchar',
             isNullable: false,
           },
+          {
+            name: 'card_network',
+            type: 'varchar',
+            isNullable: true,
+          },
+          {
+            name: 'upi_app',
+            type: 'varchar',
+            isNullable: true,
+          },
+          {
+            name: 'wallet_provider',
+            type: 'varchar',
+            isNullable: true,
+          },
+          {
+            name: 'bank_code',
+            type: 'varchar',
+            isNullable: true,
+          },
+
+          // -------- RESULT --------
+          {
+            name: 'provider_reference',
+            type: 'varchar',
+            isNullable: true,
+          },
+          {
+            name: 'failure_reason',
+            type: 'varchar',
+            isNullable: true,
+          },
+
+          // -------- RAW RESPONSE --------
+          {
+            name: 'response_payload',
+            type: 'json',
+            isNullable: true,
+          },
+
+          // -------- TIMESTAMPS --------
           {
             name: 'created_at',
             type: 'timestamp',
@@ -82,6 +117,14 @@ export class AppPaymentTransactions1765980402153 implements MigrationInterface {
         ],
       }),
       true,
+    );
+
+    await queryRunner.createIndex(
+      'app_payment_transactions',
+      new TableIndex({
+        name: 'IDX_TXN_INTENT_ID',
+        columnNames: ['intent_id'],
+      }),
     );
   }
 

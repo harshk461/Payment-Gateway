@@ -62,8 +62,7 @@ public class PaymentIntentService {
 
         intent = paymentIntentRepository.save(intent);
 
-        System.out.println("=-==--===Webhook=--=-=-=-=");
-        merchantWebhookService.emitPaymentIntentInitiated(merchantId, intent);
+        merchantWebhookService.emitPaymentIntentInitiated(merchantId, intent, "");
 
         return CreatePaymentIntentResponse.builder()
                 .intentId(intent.getId())

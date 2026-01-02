@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { AppPaymentStatus } from './entities/payment-status.entity';
 import { AppPaymentTransaction } from './entities/payment-transaction.entity';
 import axios from 'axios';
+import { AppWebhookEvent } from './entities/webhook-event.entity';
 
 @Injectable()
 export class PaymentsService {
@@ -15,6 +16,8 @@ export class PaymentsService {
     private appPaymentStatusRepository: Repository<AppPaymentStatus>,
     @InjectRepository(AppPaymentTransaction)
     private appPaymentTransactionRepository: Repository<AppPaymentTransaction>,
+    @InjectRepository(AppWebhookEvent)
+    private appWebhookEventRepository: Repository<AppWebhookEvent>,
   ) {}
 
   async createOrderPayment(userId: number, dto: any) {
@@ -36,18 +39,6 @@ export class PaymentsService {
           'Order is not eligible for payment',
           HttpStatus.BAD_REQUEST,
         );
-      }
-
-      // 2️⃣ Idempotency protection
-      const existingTxn = await this.appPaymentTransactionRepository.findOne({
-        where: { idempotencyKey: dto.idempotencyKey },
-      });
-
-      if (existingTxn) {
-        return {
-          clientSecret: existingTxn.clientSecret,
-          intentId: existingTxn.intentId,
-        };
       }
 
       // 3️⃣ Create payment intent (external call)
@@ -83,17 +74,17 @@ export class PaymentsService {
       } = response.data;
 
       // 4️⃣ Save transaction
-    //   await this.appPaymentTransactionRepository.save({
-    //     orderId: dto.orderId,
-    //     intentId,
-    //     amount: dto.amount,
-    //     currency: dto.currency,
-    //     clientSecret,
-    //     idempotencyKey: dto.idempotencyKey,
-    //     status: 'CREATED',
-    //     providerReference,
-    //     paymentMethod: 'FLOWPAY',
-    //   });
+      //   await this.appPaymentTransactionRepository.save({
+      //     orderId: dto.orderId,
+      //     intentId,
+      //     amount: dto.amount,
+      //     currency: dto.currency,
+      //     clientSecret,
+      //     idempotencyKey: dto.idempotencyKey,
+      //     status: 'CREATED',
+      //     providerReference,
+      //     paymentMethod: 'FLOWPAY',
+      //   });
       // 5️⃣ Return minimal safe response
       return {
         orderId: dto.orderId,
@@ -120,58 +111,123 @@ export class PaymentsService {
   }
 
   async paymentWebhook(dto: any) {
+    const endpoint = '/webhooks/payment';
+
     try {
-      console.log('--=====WebHook Body-====--=-', dto);
-      const { event, data, metadata } = dto;
+      console.log('----=======Webhook body--=-===-=-=',dto)
+      const { id, event, data, metadata } = dto;
 
-      const parsedMetadata = JSON.parse(metadata);
-
-      const orderPayment = await this.appOrderPaymentRepository.findOne({
-        where: {
-          orderId: parsedMetadata.orderId,
-        },
-      });
-
-      if (!orderPayment) {
+      if (!id || !event) {
         throw new HttpException(
-          "Order Payment Doesn't Exist",
+          'Invalid webhook payload',
           HttpStatus.BAD_REQUEST,
         );
       }
 
-      const newPaymentTransaction = {
-        orderId: orderPayment.orderId,
-        intentId: data.intentId,
-        amount: data.amount,
-        currency: data.currency,
-        idempotencyKey: data.idempotencyKey,
-        status: data.status,
+      // -------------------------------
+      // 1. Store webhook event FIRST
+      // -------------------------------
+      const existingEvent = await this.appWebhookEventRepository.findOne({
+        where: { id },
+      });
+
+      if (existingEvent) {
+        // Idempotent handling
+        return { received: true };
+      }
+
+      const webhookEvent = this.appWebhookEventRepository.create({
+        id,
+        merchantId: data?.attributes.merchantId ?? 0,
         event,
-        providerReference: data.providerReference || '',
-        paymentMethod: 'Flowpay',
-        clientSecret: data.clientSecret || '',
-      };
+        payload: dto,
+        endpoint,
+        status: 'RECEIVED',
+        attempts: 1,
+      });
 
-      await this.appPaymentTransactionRepository.save(newPaymentTransaction);
+      await this.appWebhookEventRepository.save(webhookEvent);
 
-      if (event.split('.')[1] == 'success') {
+      // -------------------------------
+      // 2. Business processing
+      // -------------------------------
+      if (!metadata?.orderId) {
+        throw new Error('Missing orderId in metadata');
+      }
+
+      const orderPayment = await this.appOrderPaymentRepository.findOne({
+        where: { orderId: metadata.orderId },
+      });
+
+      if (!orderPayment) {
+        throw new Error("Order Payment Doesn't Exist");
+      }
+
+      // -------------------------------
+      // 3. Save payment transaction
+      // -------------------------------
+      await this.appPaymentTransactionRepository.save({
+        intentId: data?.attributes?.intentId,
+        amount: data?.attributes?.amount,
+        currency: data?.attributes?.currency,
+        status: data?.attributes?.status,
+        providerReference: data?.attributes?.providerReference ?? null,
+        paymentMethod: data?.attributes?.paymentMethod ?? 'UNKNOWN',
+        responsePayload: dto,
+        attemptNo: 1,
+        connector: 'dummy',
+      });
+
+      // -------------------------------
+      // 4. Update order payment
+      // -------------------------------
+      if (event === 'payment_intent.succeeded') {
         await this.appOrderPaymentRepository.update(
+          { orderId: orderPayment.orderId },
           {
-            orderId: orderPayment.orderId,
-          },
-          {
-            amountPaid: orderPayment.amountPaid + Number(data.amount / 100),
-            leftAmount: orderPayment.leftAmount - Number(data.amount / 100),
+            amountPaid: orderPayment.actualAmount,
+            leftAmount: 0,
             status: 'PAID',
-            paymentMethod: 'Flowpay',
-            providerPaymentId: data.providerReference,
+            paymentMethod: data?.attributes?.paymentMethod,
+            providerPaymentId: data?.attributes?.providerReference,
           },
         );
       }
 
-      return { message: 'success' };
-    } catch (err) {
-      console.log('Payment Webhook Error', err);
+      if (event === 'payment_intent.failed') {
+        await this.appOrderPaymentRepository.update(
+          { orderId: orderPayment.orderId },
+          {
+            status: 'FAILED',
+          },
+        );
+      }
+
+      // -------------------------------
+      // 5. Mark webhook processed
+      // -------------------------------
+      await this.appWebhookEventRepository.update(
+        { id },
+        { status: 'PROCESSED' },
+      );
+
+      return { received: true };
+    } catch (err: any) {
+      console.error('Payment Webhook Error', err);
+
+      if (dto?.id) {
+        await this.appWebhookEventRepository.update(
+          { id: dto.id },
+          {
+            status: 'FAILED',
+          },
+        );
+      }
+
+      throw new HttpException(
+        'Webhook processing failed',
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 }

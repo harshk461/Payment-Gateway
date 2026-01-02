@@ -4,5 +4,6 @@ public enum PaymentMethodType {
     CARD,
     UPI,
     WALLET,
-    DUMMY
+    DUMMY,
+    NET_BANKING
 }
