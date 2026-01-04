@@ -3,10 +3,8 @@ package com.example.tokenization.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.tokenization.dto.AuthorizeRequest;
-import com.example.tokenization.dto.AuthorizeResponse;
-import com.example.tokenization.dto.DetokenizedCardRequest;
-import com.example.tokenization.dto.DetokenizedCardResponse;
+import com.example.tokenization.dto.ResolveTokenRequest;
+import com.example.tokenization.dto.ResolveTokenResponse;
 import com.example.tokenization.dto.TokenizeCardRequest;
 import com.example.tokenization.service.TokenizationService;
 
@@ -28,16 +26,10 @@ public class TokenizationController {
     public Map<String, String> tokenizeCard(@RequestBody TokenizeCardRequest entity) {
         String token = tokenizationService.tokenizeCard(entity);
         return Map.of("token", token);
-
     }
 
-    @PostMapping("/detokenize")
-    public DetokenizedCardResponse detokenizeCard(@RequestBody DetokenizedCardRequest body) {
-        return this.tokenizationService.detokenizeToken(body);
-    }
-
-    @PostMapping("/authorize")
-    public AuthorizeResponse authorize(@RequestBody AuthorizeRequest request) {
-        return this.tokenizationService.authorize(request);
+    @PostMapping("/resolve")
+    public ResolveTokenResponse resolveCard(@RequestBody ResolveTokenRequest entity) {
+        return this.tokenizationService.resolveToken(entity.getPaymentMethodToken());
     }
 }

@@ -44,7 +44,7 @@ export default function CreateAccountPage() {
   const generateAccountNumber = (branchId, accountType, sequenceNumber = 1) => {
     const branchCode = branchId.slice(-3).toUpperCase(); // MUM001 → MUM
     const typeCode = accountType.charAt(0).toUpperCase(); // savings → S
-    const paddedSeq = sequenceNumber.toString().padStart(6, "0"); // 1 → 000001
+    const paddedSeq = sequenceNumber.toString().padStart(6, "0");
 
     return `ACC${branchCode}${typeCode}${paddedSeq}`;
   };
@@ -62,7 +62,7 @@ export default function CreateAccountPage() {
         accountNumber: generateAccountNumber(
           formData.branchId,
           formData.accountType,
-          2254235352
+          Math.random(0.4) * 100000000 + 100000000
         ),
         accountType: formData.accountType,
         accountStatus: "ACTIVE",

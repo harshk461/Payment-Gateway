@@ -35,7 +35,7 @@ export class Authorization {
   @Column({ name: 'order_id' })
   orderId: string;
 
-  @Column('decimal', { precision: 12, scale: 2 })
+  @Column('int')
   amount: number;
 
   @Column({ length: 3 })

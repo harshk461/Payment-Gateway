@@ -65,12 +65,10 @@ export class Account {
   })
   accountStatus: AccountStatus;
 
-  @Column('decimal', { precision: 15, scale: 2, default: 0 })
+  @Column({ type: 'int' })
   balance: number;
 
-  @Column('decimal', {
-    precision: 15,
-    scale: 2,
+  @Column('int', {
     default: 0,
     name: 'blocked_amount',
   })

@@ -58,17 +58,13 @@ export class BankCustomerAccounts1766319266988 implements MigrationInterface {
           },
           {
             name: 'balance',
-            type: 'decimal',
-            precision: 15,
-            scale: 2,
-            default: "'0.00'",
+            type: 'int',
+            default: 0,
           },
           {
             name: 'blocked_amount',
-            type: 'decimal',
-            precision: 15,
-            scale: 2,
-            default: "'0.00'",
+            type: 'int',
+            default: 0,
           },
           {
             name: 'interest_rate',

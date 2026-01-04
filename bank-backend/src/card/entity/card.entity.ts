@@ -72,17 +72,13 @@ export class Card {
   @Column({ length: 3, nullable: true })
   cvv?: string;
 
-  @Column('decimal', {
-    precision: 12,
-    scale: 2,
+  @Column('int', {
     default: 0,
     name: 'credit_limit',
   })
   creditLimit: number;
 
-  @Column('decimal', {
-    precision: 12,
-    scale: 2,
+  @Column('int', {
     default: 0,
     name: 'current_balance',
   })
@@ -91,9 +87,7 @@ export class Card {
   @Column({ type: 'enum', enum: CardStatus, default: CardStatus.ACTIVE })
   status: CardStatus;
 
-  @Column('decimal', {
-    precision: 12,
-    scale: 2,
+  @Column('int', {
     default: 50000,
     name: 'daily_limit',
   })

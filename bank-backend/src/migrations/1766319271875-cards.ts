@@ -55,17 +55,13 @@ export class Cards1766319271875 implements MigrationInterface {
           { name: 'cvv', type: 'varchar', length: '3', isNullable: true },
           {
             name: 'credit_limit',
-            type: 'decimal',
-            precision: 12,
-            scale: 2,
-            default: '0.00',
+            type: 'int',
+            default: 0,
           },
           {
             name: 'current_balance',
-            type: 'decimal',
-            precision: 12,
-            scale: 2,
-            default: '0.00',
+            type: 'int',
+            default: 0,
           },
           {
             name: 'status',
@@ -75,10 +71,8 @@ export class Cards1766319271875 implements MigrationInterface {
           },
           {
             name: 'daily_limit',
-            type: 'decimal',
-            precision: 12,
-            scale: 2,
-            default: '50000.00',
+            type: 'int',
+            default: 0,
           },
           {
             name: 'international_enabled',

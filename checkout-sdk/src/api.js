@@ -1,5 +1,5 @@
 export async function tokenizeCard(baseUrl, cardDetails, key) {
-  const res = await fetch(`${baseUrl}/tokenize/payment-token`, {
+  const res = await fetch(`http://localhost:8800/api/v1/tokenization/tokenize-card`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -8,7 +8,11 @@ export async function tokenizeCard(baseUrl, cardDetails, key) {
     },
     body: JSON.stringify({
       type: "card",
-      card: cardDetails.card,
+      cardNumber:cardDetails.card.number,
+      expMonth:cardDetails.card.expMonth,
+      expYear:cardDetails.card.expYear,
+      cvv:cardDetails.card.cvv,
+      cardHolderName: "Dummy",
     }),
   });
 

@@ -53,7 +53,7 @@ export class Transaction {
   @PrimaryColumn({ length: 20 })
   id: string;
 
-  @Column({ length: 50, unique: true })
+  @Column({ length: 50, unique: true, name: 'txn_reference' })
   txnReference: string;
 
   @Column({ name: 'account_id', length: 20 })
@@ -68,13 +68,13 @@ export class Transaction {
   @Column({ type: 'enum', enum: TransactionType })
   type: TransactionType;
 
-  @Column('decimal', { precision: 15, scale: 2 })
+  @Column('int')
   amount: number;
 
-  @Column('decimal', { precision: 15, scale: 2 })
+  @Column('int', { name: 'balance_before' })
   balanceBefore: number;
 
-  @Column('decimal', { precision: 15, scale: 2 })
+  @Column('int', { name: 'balance_after' })
   balanceAfter: number;
 
   @Column({ type: 'text', nullable: true })
@@ -90,31 +90,36 @@ export class Transaction {
   })
   status: TransactionStatus;
 
-  @Column({ type: 'enum', enum: PaymentMethod, nullable: true })
+  @Column({
+    type: 'enum',
+    enum: PaymentMethod,
+    nullable: true,
+    name: 'payment_method',
+  })
   paymentMethod?: PaymentMethod;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ name: 'source_reference', length: 100, nullable: true })
   sourceReference?: string;
 
-  @Column({ length: 50, nullable: true })
+  @Column({ name: 'source_bank', length: 50, nullable: true })
   sourceBank?: string;
 
-  @Column({ length: 20, nullable: true })
+  @Column({ name: 'source_ifsc', length: 20, nullable: true })
   sourceIfsc?: string;
 
-  @Column({ length: 20, nullable: true })
+  @Column({ name: 'destination_account', length: 20, nullable: true })
   destinationAccount?: string;
 
-  @Column({ length: 20, nullable: true })
+  @Column({ name: 'destination_ifsc', length: 20, nullable: true })
   destinationIfsc?: string;
 
-  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  @Column('int', { name: 'transaction_fee' })
   transactionFee: number;
 
-  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  @Column('int', { name: 'gst_amount' })
   gstAmount: number;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ name: 'initiated_at', type: 'timestamp', nullable: true })
   initiatedAt?: Date;
 
   @Column({
@@ -124,13 +129,13 @@ export class Transaction {
   })
   processedAt: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamp', nullable: true, name: 'completed_at' })
   completedAt?: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
   // ✅ FIXED Relationships - All column names match

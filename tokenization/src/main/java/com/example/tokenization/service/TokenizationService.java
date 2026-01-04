@@ -4,26 +4,15 @@ import java.time.Instant;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.tokenization.core.AesUtil;
 import com.example.tokenization.core.TokenGenerator;
-import com.example.tokenization.dto.AuthorizeRequest;
-import com.example.tokenization.dto.AuthorizeResponse;
-import com.example.tokenization.dto.BankAuthorizeRequest;
-import com.example.tokenization.dto.BankAuthorizeResponse;
-import com.example.tokenization.dto.DetokenizedCardRequest;
-import com.example.tokenization.dto.DetokenizedCardResponse;
+import com.example.tokenization.dto.ResolveTokenResponse;
 import com.example.tokenization.dto.TokenizeCardRequest;
-import com.example.tokenization.entity.AuditLog;
-import com.example.tokenization.entity.AuthorizationRequest;
 import com.example.tokenization.entity.CardVault;
-import com.example.tokenization.exception.TokenizationException;
-import com.example.tokenization.repository.AuditLogRepository;
-import com.example.tokenization.repository.AuthorizationRequestRepository;
 import com.example.tokenization.repository.CardVaultRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -33,10 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class TokenizationService {
     private final CardVaultRepository vaultRepository;
     @Autowired
-    private final BankClient bankClient;
     private final AesUtil aesUtil;
-    private final AuditLogRepository auditLogRepository;
-    private final AuthorizationRequestRepository authRepo;
     private final TokenGenerator tokenGenerator;
 
     public String tokenizeCard(TokenizeCardRequest dto) {
@@ -77,117 +63,41 @@ public class TokenizationService {
         return token;
     }
 
-    public DetokenizedCardResponse detokenizeToken(DetokenizedCardRequest dto) {
+    public ResolveTokenResponse resolveToken(String paymentMethodToken) {
 
-        // 1️⃣ Validate input
-        if (dto == null || dto.getPaymentMethodToken() == null || dto.getPaymentMethodToken().isBlank()) {
-            throw new TokenizationException("paymentMethodToken is required");
+        if (paymentMethodToken == null || paymentMethodToken.isBlank()) {
+            throw new IllegalArgumentException("Invalid payment token");
         }
 
-        if (dto.getPurpose() == null || dto.getPurpose().isBlank()) {
-            throw new TokenizationException("purpose is required");
+        // 1️⃣ Fetch vault entry
+        CardVault vault = vaultRepository
+                .findByToken(paymentMethodToken)
+                .orElseThrow(() -> new IllegalArgumentException("Token not found"));
+
+        // 2️⃣ Validate token state
+        if (!vault.getActive() || !"ACTIVE".equals(vault.getStatus())) {
+            throw new IllegalArgumentException("Token is inactive");
         }
 
-        // 2️⃣ Validate allowed purposes
-        if (!dto.getPurpose().equals("AUTHORIZATION")) {
-            throw new TokenizationException("Invalid detokenization purpose");
-        }
-
-        // 3️⃣ Fetch vault entry
-        CardVault vault = vaultRepository.findByToken(dto.getPaymentMethodToken())
-                .orElseThrow(() -> new TokenizationException(
-                        "Invalid or unknown token"));
-
-        // 4️⃣ Validate token state
-        if (!vault.getActive()) {
-            throw new TokenizationException("Token is inactive or revoked");
-        }
-
+        // 3️⃣ Validate token expiry
         if (vault.getExpiresAt().isBefore(Instant.now())) {
-            throw new TokenizationException("Token has expired");
+            throw new IllegalArgumentException("Token has expired");
         }
 
-        // 5️⃣ Decrypt sensitive data
-        String pan;
-        String cvv;
-
+        // 4️⃣ Decrypt PAN
+        String cardNumber;
         try {
-            pan = aesUtil.decrypt(vault.getEncryptedPan());
-            cvv = aesUtil.decrypt(vault.getEncryptedCvv());
-        } catch (Exception ex) {
-            throw new TokenizationException("Failed to decrypt card data");
+            cardNumber = aesUtil.decrypt(vault.getEncryptedPan());
+        } catch (Exception e) {
+            throw new IllegalStateException("PAN decryption failed");
         }
 
-        // 6️⃣ Audit log (IMPORTANT)
-        // auditLogRepository.logDetokenization(
-        // vault.getToken(),
-        // dto.getPurpose(),
-        // "BANK_SERVER");
-
-        // 7️⃣ Return minimal required data
-        return DetokenizedCardResponse.builder()
-                .cardNumber(pan)
-                .cvv(cvv)
-                .expMonth(vault.getExpMonth())
-                .expYear(vault.getExpYear())
-                .build();
-    }
-
-    public AuthorizeResponse authorize(AuthorizeRequest dto) {
-        CardVault vault = vaultRepository.findByToken(dto.getPaymentMethodToken())
-                .orElseThrow(() -> new TokenizationException("Invalid token"));
-
-        if (!vault.getActive()) {
-            throw new TokenizationException("Token revoked");
-        }
-
-        // 3️⃣ Detokenize (IN MEMORY)
-        String pan = aesUtil.decrypt(vault.getEncryptedPan());
-        String cvv = aesUtil.decrypt(vault.getEncryptedCvv());
-
-        // 4️⃣ Call bank server
-        BankAuthorizeRequest bankReq = BankAuthorizeRequest.builder()
-                .pan(pan)
-                .cvv(cvv)
-                .expMonth(vault.getExpMonth())
-                .expYear(vault.getExpYear())
-                .amount(dto.getAmount())
-                .currency(dto.getCurrency())
-                .build();
-
-        BankAuthorizeResponse bankRes = bankClient.authorize(bankReq);
-
-        // 5️⃣ Persist authorization attempt
-        String randomAuthorizationId = UUID.randomUUID().toString();
-
-        AuthorizationRequest auth = AuthorizationRequest.builder()
-                .authorizationId(randomAuthorizationId)
-                .token(dto.getPaymentMethodToken())
-                .merchantId(dto.getMerchantId())
-                .amount(dto.getAmount())
-                .currency(dto.getCurrency())
-                .status(bankRes.isApproved() ? "AUTHORIZED" : "DECLINED")
-                .bankRrn(bankRes.getBankReference())
-                .build();
-
-        authRepo.save(auth);
-
-        // 6️⃣ Audit log (PCI requirement)
-        auditLogRepository.save(
-                AuditLog.builder()
-                        .actor("SYSTEM")
-                        .referenceId(bankRes.getBankReference())
-                        .action("AUTHORIZE")
-                        .token(dto.getPaymentMethodToken())
-                        .purpose(dto.getPurpose())
-                        .build());
-
-        // 7️⃣ Return SAFE response
-        return AuthorizeResponse.builder()
-                .authorized(bankRes.isApproved())
-                .bankReference(bankRes.getBankReference())
-                .status(bankRes.isApproved() ? "AUTHORIZED" : "DECLINED")
-                .reason(bankRes.getDeclineReason())
+        // 5️⃣ Return ONLY required fields
+        return ResolveTokenResponse.builder()
+                .cardNumber(cardNumber)
+                .expiryMonth(vault.getExpMonth())
+                .expiryYear(vault.getExpYear())
+                .cardNetwork(vault.getCardNetwork())
                 .build();
     }
 

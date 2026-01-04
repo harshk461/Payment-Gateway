@@ -7,6 +7,7 @@ import { Account } from 'src/accounts/entity/customer-account.entity';
 import { Card } from 'src/card/entity/card.entity';
 import { Transaction } from 'src/transactions/entity/transaction.entity';
 import { Authorization } from './entity/authorization-record.entity';
+import { TokenizationModule } from 'src/infra/tokenization/tokenization.module';
 
 @Module({
   controllers: [AuthorizationController],
@@ -19,6 +20,7 @@ import { Authorization } from './entity/authorization-record.entity';
       Transaction,
       Authorization,
     ]),
+    TokenizationModule,
   ],
 })
 export class AuthorizationModule {}

@@ -34,7 +34,6 @@ public class ApiPaymentKeyFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
 
         String authHeader = req.getHeader("Authorization");
-
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String jwt = authHeader.substring(7);
 

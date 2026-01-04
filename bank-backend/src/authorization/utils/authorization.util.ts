@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 export function validateCvv(cvv: string, cardNumber: string): boolean {
   if (!/^\d+$/.test(cvv)) {
     return false;
@@ -36,4 +38,22 @@ export function validateExpiry(
   const now = new Date();
 
   return expiryDate >= now;
+}
+
+const BASE62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+function base62Encode(num: bigint): string {
+  let encoded = '';
+  while (num > 0n) {
+    encoded = BASE62[Number(num % 62n)] + encoded;
+    num /= 62n;
+  }
+  return encoded || '0';
+}
+
+export function generateTransactionReference(): string {
+  const timePart = base62Encode(BigInt(Date.now()));
+  const randomPart = [...randomBytes(4)].map((b) => BASE62[b % 62]).join('');
+
+  return `txn_${timePart}${randomPart}`;
 }

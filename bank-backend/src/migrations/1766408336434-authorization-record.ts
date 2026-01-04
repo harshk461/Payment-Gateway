@@ -30,9 +30,8 @@ export class AuthorizationRecord1766408336434 implements MigrationInterface {
           },
           {
             name: 'amount',
-            type: 'decimal',
-            precision: 12,
-            scale: 2,
+            type: 'int',
+            default: 0,
           },
           {
             name: 'currency',
